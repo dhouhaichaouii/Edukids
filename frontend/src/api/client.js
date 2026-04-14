@@ -1,12 +1,8 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-// ── Une seule fonction request avec le token JWT ──────────────────────────────
 const request = async (method, endpoint, data = null) => {
-  const token = localStorage.getItem('token')
-
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
   }
 
   const config = { method, headers }
@@ -24,14 +20,10 @@ const request = async (method, endpoint, data = null) => {
     json = {}
   }
 
-  if (response.status === 401) {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    window.location.href = '/login'
-    return
-  }
-
-  if (!response.ok) {
+  // IMPORTANT:
+  // Pas de redirection automatique ici.
+  // Sinon un login incorrect quitte la page login.
+  if (!response.ok || json.success === false) {
     throw new Error(json.message || json.error || 'Something went wrong')
   }
 
@@ -41,24 +33,22 @@ const request = async (method, endpoint, data = null) => {
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const authAPI = {
   teacherRegister: (data) => request('POST', '/auth/teacher/register', data),
-  teacherLogin:    (data) => request('POST', '/auth/teacher/login',    data),
-  parentRegister:  (data) => request('POST', '/auth/parent/register',  data),
-  parentLogin:     (data) => request('POST', '/auth/parent/login',     data),
-  studentLogin:    (data) => request('POST', '/student-auth/login',    data),
+  teacherLogin: (data) => request('POST', '/auth/teacher/login', data),
+  parentRegister: (data) => request('POST', '/auth/parent/register', data),
+  parentLogin: (data) => request('POST', '/auth/parent/login', data),
+  studentLogin: (data) => request('POST', '/student-auth/login', data),
 }
 
 // ── Classes ───────────────────────────────────────────────────────────────────
 export const classesAPI = {
-  create:      (data)     => request('POST',   '/classes',                data),
-  getByTeacher:(teacherId)=> request('GET',    `/classes/teacher/${teacherId}`),
-  getById:     (id)       => request('GET',    `/classes/${id}`),
-  update:      (id, data) => request('PUT',    `/classes/${id}`,          data),
-  delete:      (id)       => request('DELETE', `/classes/${id}`),
+  create: (data) => request('POST', '/classes', data),
+  getByTeacher: (teacherId) => request('GET', `/classes/teacher/${teacherId}`),
+  getById: (id) => request('GET', `/classes/${id}`),
+  update: (id, data) => request('PATCH', `/classes/${id}`, data),
+  delete: (id) => request('DELETE', `/classes/${id}`),
 }
 
 // ── Live Session ──────────────────────────────────────────────────────────────
-// ⚠️ Ces méthodes utilisaient une variable `api` (axios) non définie.
-// Migrées vers fetch via request() pour cohérence.
 export const liveSessionAPI = {
   getClassDetails: (classId) =>
     request('GET', `/teacher/live/classes/${classId}`),
@@ -78,10 +68,10 @@ export const liveSessionAPI = {
 
 // ── Sessions ──────────────────────────────────────────────────────────────────
 export const sessionsAPI = {
-  start:     (data)    => request('POST', '/sessions/start',          data),
-  end:       (id)      => request('POST', `/sessions/${id}/end`),
-  getActive: (classId) => request('GET',  `/sessions/active/${classId}`),
-  getById:   (id)      => request('GET',  `/sessions/${id}`),
+  start: (data) => request('POST', '/sessions/start', data),
+  end: (id) => request('POST', `/sessions/${id}/end`),
+  getActive: (classId) => request('GET', `/sessions/active/${classId}`),
+  getById: (id) => request('GET', `/sessions/${id}`),
 }
 
 // ── Teacher ───────────────────────────────────────────────────────────────────
@@ -91,15 +81,16 @@ export const teacherAPI = {
 
 // ── Events ────────────────────────────────────────────────────────────────────
 export const eventsAPI = {
-  buttonPress: (data)      => request('POST', '/events/button-press',      data),
-  getBySession:(sessionId) => request('GET',  `/events/session/${sessionId}`),
+  buttonPress: (data) => request('POST', '/events/button-press', data),
+  getBySession: (sessionId) => request('GET', `/events/session/${sessionId}`),
 }
 
 // ── Parent ────────────────────────────────────────────────────────────────────
 export const parentAPI = {
-  getChildren:     (parentId)         => request('GET',  `/parent/children/${parentId}`),
-  addChild:        (data)             => request('POST', '/parent/children',             data),
-  getDailySummary: (studentId, date)  => request('GET',  `/parent/daily-summary/${studentId}${date ? `?date=${date}` : ''}`),
+  getChildren: (parentId) => request('GET', `/parent/children/${parentId}`),
+  addChild: (data) => request('POST', '/parent/children', data),
+  getDailySummary: (studentId, date) =>
+    request('GET', `/parent/daily-summary/${studentId}${date ? `?date=${date}` : ''}`),
 }
 
 // ── Student ───────────────────────────────────────────────────────────────────
@@ -109,7 +100,8 @@ export const studentAPI = {
 
 export const studentsAPI = {
   getClassrooms: (studentId) => request('GET', `/students/${studentId}/classrooms`),
-  joinClassroom: (studentId, classroomCode) => request('POST', `/students/${studentId}/join`, { classroomCode }),
+  joinClassroom: (studentId, classroomCode) =>
+    request('POST', `/students/${studentId}/join`, { classroomCode }),
 }
 
 export const materialsAPI = {
@@ -117,12 +109,14 @@ export const materialsAPI = {
 }
 
 export default {
-  auth:        authAPI,
-  classes:     classesAPI,
+  auth: authAPI,
+  classes: classesAPI,
   liveSession: liveSessionAPI,
-  sessions:    sessionsAPI,
-  teacher:     teacherAPI,
-  events:      eventsAPI,
-  parent:      parentAPI,
-  student:     studentAPI,
+  sessions: sessionsAPI,
+  teacher: teacherAPI,
+  events: eventsAPI,
+  parent: parentAPI,
+  student: studentAPI,
+  students: studentsAPI,
+  materials: materialsAPI,
 }

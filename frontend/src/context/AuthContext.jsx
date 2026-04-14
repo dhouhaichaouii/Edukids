@@ -49,13 +49,12 @@ export const AuthProvider = ({ children }) => {
     } else {
       localStorage.removeItem('ek_user')
       localStorage.removeItem('ek_role')
-      localStorage.removeItem('ek_token')
     }
 
     setLoading(false)
   }, [])
 
-  const login = (userData, userRole, token = null) => {
+  const login = (userData, userRole) => {
     if (!userData || !userRole) {
       console.error('AuthContext.login() — missing userData or userRole', {
         userData,
@@ -83,10 +82,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('ek_user', JSON.stringify(normalized))
     localStorage.setItem('ek_role', userRole)
 
-    if (token) {
-      localStorage.setItem('ek_token', token)
-    }
-
     return true
   }
 
@@ -96,7 +91,6 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.removeItem('ek_user')
     localStorage.removeItem('ek_role')
-    localStorage.removeItem('ek_token')
   }
 
   return (

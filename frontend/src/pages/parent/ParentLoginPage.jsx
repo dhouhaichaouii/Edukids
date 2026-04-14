@@ -73,7 +73,7 @@ const ParentLoginPage = () => {
       })
 
       setSuccess(true)
-      login(res.data, 'parent', res.data?.token)
+      login(res.data, 'parent')
 
       setTimeout(() => {
         navigate('/parent/dashboard')
