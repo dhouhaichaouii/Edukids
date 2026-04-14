@@ -1,18 +1,10 @@
-<<<<<<< HEAD
 import { Routes, Route, Navigate, Link } from 'react-router-dom'
 import './styles/tokens.css'
-=======
-// src/App.jsx
-
-import { Routes, Route, Navigate, Link, Outlet } from 'react-router-dom'
-import { useEffect, Component } from 'react'
->>>>>>> 5f15219f4b4a0e23b43b19da1d37e1b7f6238fd9
 
 // ── Pages existantes ────────────────────────────────────────────
 import RoleSelectPage      from './pages/RoleSelectPage'
 import TeacherRegisterPage from './pages/teacher/TeacherRegisterPage'
 import TeacherLoginPage from './pages/teacher/TeacherLoginPage'
-<<<<<<< HEAD
 import ParentLoginPage from './pages/parent/ParentLoginPage'
 import ParentRegisterPage from './pages/parent/ParentRegisterPage'
 import StudentLoginPage from './pages/student/StudentLoginPage'
@@ -24,38 +16,15 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<RoleSelectPage />} />
-=======
-import TeacherClassesPage from './pages/teacher/TeacherClassesPage'
-import StudentLoginPage  from './pages/student/StudentLoginPage'
-import ClassroomsPage    from './pages/student/Classroomspage'
-import ClassroomPage     from './pages/student/Classroompage'
-import CoursePage        from './pages/student/Coursepage'
-import BuddyPage         from './pages/student/BuddyPage'
-const App = () => {
-  return (
-    <Routes>
-
-      {/* ── Home / Role Select ──────────────────────────────── */}
-      <Route path="/"            element={<RoleSelectPage />} />
->>>>>>> 5f15219f4b4a0e23b43b19da1d37e1b7f6238fd9
       <Route path="/role-select" element={<RoleSelectPage />} />
 
       <Route path="/teacher/register" element={<TeacherRegisterPage />} />
       <Route path="/teacher/login" element={<TeacherLoginPage />} />
-<<<<<<< HEAD
       <Route path="/teacher/classes" element={<TeacherClassesPage />} />
       <Route path="/teacher/class/:classId/live" element={<TeacherClassLivePage />} />
    
       <Route path="/teacher/class/:classId/live" element={<TeacherClassLivePage />} />
 
-=======
-      <Route path="/teacher/dashboard" element={<TeacherClassesPage />} />
-
-      <Route
-        path="/teacher/session"
-        element={<Placeholder title="Live Session" color="#4ECDC4" backTo="/teacher/dashboard" backLabel="← Dashboard teacher" />}
-      />
->>>>>>> 5f15219f4b4a0e23b43b19da1d37e1b7f6238fd9
       <Route
         path="/teacher/students"
         element={
@@ -101,52 +70,21 @@ const App = () => {
         }
       />
 
-<<<<<<< HEAD
       <Route path="/parent/login" element={<ParentLoginPage />} />
       <Route path="/parent/register" element={<ParentRegisterPage />} />
-=======
-      {/* ── Parent ───────────────────────────────────────────────── */}
->>>>>>> 5f15219f4b4a0e23b43b19da1d37e1b7f6238fd9
       <Route
         path="/parent/dashboard"
         element={<Placeholder title="Parent Dashboard" color="#FF6B6B" />}
       />
 
-<<<<<<< HEAD
       <Route path="/student/login" element={<StudentLoginPage />} />
       <Route
-=======
-      {/* ── Student ──────────────────────────────────────────────── */}
-      <Route
-        path="/student/login"
-        element={<StudentLoginPage />}
-      />
-      <Route
->>>>>>> 5f15219f4b4a0e23b43b19da1d37e1b7f6238fd9
         path="/student/dashboard"
         element={<ClassroomsPage />}
       />
-<<<<<<< HEAD
 
       <Route path="/student/buddy" element={<BuddyPage />} />
 
-=======
-      <Route
-        path="/student/classrooms"
-        element={<ClassroomsPage />}
-      />
-      <Route
-        path="/student/classroom/:id"
-        element={<ClassroomPage />}
-      />
-      <Route
-        path="/student/course/:id"
-        element={<CoursePage />}
-      />
-      <Route path="/student/buddy" element={<BuddyPage />} />
-   
-      {/* ── Fallback ───────────────────────────────────────────────── */}
->>>>>>> 5f15219f4b4a0e23b43b19da1d37e1b7f6238fd9
       <Route path="*" element={<Navigate to="/" replace />} />
 
     </Routes>
