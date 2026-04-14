@@ -77,11 +77,6 @@ const App = () => {
         element={<Placeholder title="Parent Dashboard" color="#FF6B6B" />}
       />
 
-      <Route path="/student/login" element={<StudentLoginPage />} />
-      <Route
-        path="/student/dashboard"
-        element={<ClassroomsPage />}
-      />
 
       <Route path="/student/buddy" element={<BuddyPage />} />
 

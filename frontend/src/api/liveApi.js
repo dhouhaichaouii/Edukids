@@ -1,7 +1,6 @@
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const req = async (method, endpoint, data = null) => {
-
   const res = await fetch(`${BASE}${endpoint}`, {
     method,
     headers: {
@@ -36,4 +35,8 @@ export const materialsAPI = {
   add: (body) => req('POST', '/materials', body),
 
   remove: (id) => req('DELETE', `/materials/${id}`),
+}
+
+export const studentsAPI = {
+  getByClass: (classId) => req('GET', `/students/class/${classId}`),
 }

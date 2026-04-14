@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
-import { liveAPI, materialsAPI } from '../../api/liveApi'
+import { liveAPI, materialsAPI, studentsAPI } from '../../api/liveApi'
 import AddFileModal from '../../components/live/AddFileModal'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000'
@@ -42,6 +42,7 @@ export default function TeacherClassLivePage() {
   const [session, setSession] = useState(null)
   const [snapshot, setSnapshot] = useState(null)
   const [materials, setMaterials] = useState([])
+  const [students, setStudents] = useState([])
   const [socketStatus, setSocketStatus] = useState('disconnected')
   const [showFileModal, setShowFileModal] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
@@ -52,6 +53,17 @@ export default function TeacherClassLivePage() {
 
   const normalizedClassId = cls?._id || cls?.id || classId
   const sc = SUBJECT_CFG[subject] || SUBJECT_CFG.mathematics
+
+  const studentNameMap = useMemo(
+    () =>
+      Object.fromEntries(
+        students.map((st) => [
+          st._id || st.id,
+          `${st.firstName || ''} ${st.lastName || ''}`.trim(),
+        ])
+      ),
+    [students]
+  )
 
   const cleanupSocket = useCallback(() => {
     if (socketRef.current) {
@@ -116,9 +128,7 @@ export default function TeacherClassLivePage() {
 
   const loadForSubject = useCallback(
     async (selectedSubject) => {
-      if (!teacherId || !normalizedClassId || !selectedSubject) {
-        return
-      }
+      if (!teacherId || !normalizedClassId || !selectedSubject) return
 
       setLoading(true)
       setLoadingFiles(true)
@@ -156,8 +166,13 @@ export default function TeacherClassLivePage() {
 
         connectSocket(sess._id)
 
-        const mRes = await materialsAPI.get(normalizedClassId, selectedSubject, teacherId)
+        const [mRes, studentsRes] = await Promise.all([
+          materialsAPI.get(normalizedClassId, selectedSubject, teacherId),
+          studentsAPI.getByClass(normalizedClassId),
+        ])
+
         setMaterials(mRes?.data || mRes?.materials || [])
+        setStudents(studentsRes?.data || [])
       } catch (err) {
         setError(
           err?.response?.data?.message ||
@@ -362,7 +377,7 @@ export default function TeacherClassLivePage() {
           <div style={s.grid}>
             <div style={s.leftCol}>
               <ScoreCard snapshot={snapshot} sc={sc} />
-              <StudentGrid snapshot={snapshot} />
+              <StudentGrid snapshot={snapshot} studentNameMap={studentNameMap} />
               <ButtonsCard snapshot={snapshot} />
             </div>
 
@@ -397,35 +412,136 @@ export default function TeacherClassLivePage() {
 
 function ScoreCard({ snapshot, sc }) {
   const tc = TREND_CFG[snapshot?.trend]
+  const history = snapshot?.classScoreHistory || []
+
+  const width = 760
+  const height = 120
+  const padding = 18
+
+  const points =
+    history.length > 0
+      ? history.map((value, index) => {
+          const x =
+            history.length === 1
+              ? width / 2
+              : padding + (index * (width - padding * 2)) / (history.length - 1)
+
+          const y = height - padding - (Math.max(0, Math.min(100, value)) / 100) * (height - padding * 2)
+
+          return { x, y, value }
+        })
+      : []
+
+  const pathD = points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+    .join(' ')
+
   return (
     <div style={s.card}>
       <div style={s.cardHead}>
         <span style={s.cardTitle}>📊 Class Score</span>
         {tc && (
-          <span style={{ fontSize: '0.74rem', fontWeight: 800, padding: '3px 10px', borderRadius: 9999, color: tc.color, background: `${tc.color}14` }}>
+          <span
+            style={{
+              fontSize: '0.74rem',
+              fontWeight: 800,
+              padding: '3px 10px',
+              borderRadius: 9999,
+              color: tc.color,
+              background: `${tc.color}14`,
+            }}
+          >
             {tc.label}
           </span>
         )}
       </div>
+
       {!snapshot ? (
         <p style={s.emptyText}>Waiting for first interaction…</p>
       ) : (
         <>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 14 }}>
-            <span style={{ fontFamily: "'Baloo 2',cursive", fontSize: '3.2rem', fontWeight: 800, color: sc.color, lineHeight: 1 }}>
+            <span
+              style={{
+                fontFamily: "'Baloo 2',cursive",
+                fontSize: '3.2rem',
+                fontWeight: 800,
+                color: sc.color,
+                lineHeight: 1,
+              }}
+            >
               {snapshot.classScore ?? 0}
             </span>
-            <span style={{ fontFamily: "'Baloo 2',cursive", fontSize: '1.1rem', color: '#C8C4DC', fontWeight: 600 }}>/100</span>
+            <span
+              style={{
+                fontFamily: "'Baloo 2',cursive",
+                fontSize: '1.1rem',
+                color: '#C8C4DC',
+                fontWeight: 600,
+              }}
+            >
+              /100
+            </span>
           </div>
 
-          {snapshot.classScoreHistory?.length > 1 && (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 56 }}>
-              {snapshot.classScoreHistory.slice(-8).map((v, i, arr) => (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                  <div style={{ width: '100%', height: `${(v / 100) * 48}px`, minHeight: 3, background: i === arr.length - 1 ? sc.color : `${sc.color}50`, borderRadius: '4px 4px 0 0', transition: 'height 400ms ease' }} />
-                  <span style={{ fontSize: '0.58rem', color: '#B0AACB', fontWeight: 600 }}>{v}</span>
-                </div>
-              ))}
+          {history.length > 1 && (
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <svg
+                viewBox={`0 0 ${width} ${height}`}
+                style={{ width: '100%', height: 140, display: 'block' }}
+              >
+                {[0, 25, 50, 75, 100].map((tick) => {
+                  const y =
+                    height - padding - (tick / 100) * (height - padding * 2)
+
+                  return (
+                    <g key={tick}>
+                      <line
+                        x1={padding}
+                        y1={y}
+                        x2={width - padding}
+                        y2={y}
+                        stroke="rgba(200,196,220,0.25)"
+                        strokeDasharray="4 4"
+                      />
+                      <text
+                        x={4}
+                        y={y + 4}
+                        fontSize="10"
+                        fill="#B0AACB"
+                        fontWeight="700"
+                      >
+                        {tick}
+                      </text>
+                    </g>
+                  )
+                })}
+
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke={sc.color}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {points.map((p, i) => (
+                  <g key={i}>
+                    <circle cx={p.x} cy={p.y} r="5" fill={sc.color} />
+                    <text
+                      x={p.x}
+                      y={p.y - 12}
+                      textAnchor="middle"
+                      fontSize="10"
+                      fill="#8F86C9"
+                      fontWeight="700"
+                    >
+                      {p.value}
+                    </text>
+                  </g>
+                ))}
+              </svg>
             </div>
           )}
         </>
@@ -434,7 +550,7 @@ function ScoreCard({ snapshot, sc }) {
   )
 }
 
-function StudentGrid({ snapshot }) {
+function StudentGrid({ snapshot, studentNameMap }) {
   if (!snapshot?.studentScores) return null
   const entries = Object.entries(snapshot.studentScores)
   if (!entries.length) return null
@@ -451,15 +567,54 @@ function StudentGrid({ snapshot }) {
       <div style={s.cardHead}>
         <span style={s.cardTitle}>👥 Student Scores</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(68px,1fr))', gap: 8 }}>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))',
+          gap: 10,
+        }}
+      >
         {entries.map(([id, score]) => {
           const c = colorFor(id)
+          const studentName = studentNameMap[id] || 'Unknown student'
+
           return (
-            <div key={id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '9px 6px', borderRadius: 12, border: `1.5px solid ${c}25`, background: `${c}06`, gap: 3 }}>
-              <span style={{ fontFamily: "'Nunito',sans-serif", fontSize: '0.62rem', fontWeight: 700, color: '#9E99B8' }}>
-                #{id.slice(-4).toUpperCase()}
+            <div
+              key={id}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '12px 8px',
+                borderRadius: 12,
+                border: `1.5px solid ${c}25`,
+                background: `${c}06`,
+                gap: 4,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Nunito',sans-serif",
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  color: '#7C7698',
+                  textAlign: 'center',
+                  lineHeight: 1.3,
+                }}
+              >
+                {studentName}
               </span>
-              <span style={{ fontFamily: "'Baloo 2',cursive", fontSize: '1.15rem', fontWeight: 800, color: c, lineHeight: 1 }}>
+
+              <span
+                style={{
+                  fontFamily: "'Baloo 2',cursive",
+                  fontSize: '1.2rem',
+                  fontWeight: 800,
+                  color: c,
+                  lineHeight: 1,
+                }}
+              >
                 {score ?? '–'}
               </span>
             </div>
