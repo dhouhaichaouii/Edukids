@@ -395,17 +395,16 @@ export default function TeacherClassLivePage() {
         )}
       </div>
 
-      {showFileModal && session && (
-        <AddFileModal
-          classId={normalizedClassId}
-          teacherId={teacherId}
-          subject={subject}
-          sessionId={session._id}
-          onSave={handleFileSaved}
-          onClose={() => setShowFileModal(false)}
-          sc={sc}
-        />
-      )}
+   {showFileModal && session && (
+  <AddFileModal
+    classId={normalizedClassId}
+    teacherId={teacherId}
+    subject={subject}
+    onSave={handleFileSaved}
+    onClose={() => setShowFileModal(false)}
+    sc={sc}
+  />
+)}
     </div>
   )
 }

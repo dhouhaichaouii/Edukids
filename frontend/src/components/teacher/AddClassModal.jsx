@@ -1,42 +1,13 @@
-// src/components/teacher/AddClassModal.jsx
 import { useState } from 'react'
-import { useAuth, extractUserId } from '../../context/AuthContext'
 import { classesAPI } from '../../api/client'
 
-const ICONS = [
-  { key: 'numbers', emoji: '🔢', label: 'Maths' },
-  { key: 'book', emoji: '📘', label: 'Lecture' },
-  { key: 'science', emoji: '🧪', label: 'Sciences' },
-  { key: 'art', emoji: '🎨', label: 'Art' },
-  { key: 'music', emoji: '🎵', label: 'Musique' },
-  { key: 'sport', emoji: '⚽', label: 'Sport' },
-  { key: 'globe', emoji: '🌍', label: 'Géographie' },
-  { key: 'computer', emoji: '💻', label: 'Informatique' },
-]
-
-const safeStoredUser = () => {
-  try {
-    const raw = localStorage.getItem('ek_user')
-    if (!raw || raw === 'undefined' || raw === 'null') return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
-}
-
-const AddClassModal = ({ onSave, onClose }) => {
-  const { user, loading } = useAuth()
-  const teacherId = extractUserId(user) || extractUserId(safeStoredUser())
-
+const AddClassModal = ({ teacherId, onSave, onClose }) => {
   const [className, setClassName] = useState('')
-  const [selectedIcon, setSelectedIcon] = useState('book')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (loading) return
 
     if (!className.trim()) {
       setError('Class name is required.')
@@ -44,8 +15,7 @@ const AddClassModal = ({ onSave, onClose }) => {
     }
 
     if (!teacherId) {
-      console.error('teacherId missing — user:', user)
-      setError('Session expired. Please log out and log in again.')
+      setError('Teacher introuvable. Reconnectez-vous.')
       return
     }
 
@@ -54,18 +24,17 @@ const AddClassModal = ({ onSave, onClose }) => {
 
     try {
       const payload = {
-        teacherId,
+        teacherId: String(teacherId),
         name: className.trim(),
-        icon: selectedIcon,
       }
 
-      console.log('Creating class with payload:', payload)
+      console.log('[AddClassModal] payload =', payload)
 
       const created = await classesAPI.create(payload)
-      onSave(created?.class || created?.data || created)
+      onSave(created?.data || created)
       onClose()
     } catch (err) {
-      console.error('Create class error:', err)
+      console.error('[AddClassModal] create class error =', err)
       setError(err.message || 'Network error. Please try again.')
     } finally {
       setSaving(false)
@@ -83,11 +52,6 @@ const AddClassModal = ({ onSave, onClose }) => {
           border-color:#9B8EFF!important;
           box-shadow:0 0 0 3px rgba(155,142,255,.15);
           outline:none;
-        }
-
-        .ek-icon-btn:hover:not(.active) {
-          border-color:rgba(155,142,255,.5)!important;
-          background:rgba(155,142,255,.05)!important;
         }
 
         .ek-cancel:hover {
@@ -276,37 +240,6 @@ const s = {
     color: '#FF6B6B',
     fontSize: '0.8rem',
     fontWeight: 700,
-  },
-  iconGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4,1fr)',
-    gap: 8,
-  },
-  iconBtn: {
-    padding: '10px 6px',
-    borderRadius: 12,
-    border: '1.5px solid rgba(200,196,220,.30)',
-    background: '#F8F7FF',
-    cursor: 'pointer',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 4,
-    transition: 'all 180ms ease',
-  },
-  iconBtnActive: {
-    border: '2px solid #9B8EFF',
-    background: 'rgba(155,142,255,.08)',
-    boxShadow: '0 2px 12px rgba(155,142,255,.20)',
-  },
-  iconEmoji: {
-    fontSize: '1.5rem',
-    lineHeight: 1,
-  },
-  iconLabel: {
-    fontSize: '0.62rem',
-    fontFamily: "'Nunito',sans-serif",
-    transition: 'color 180ms',
   },
   actions: {
     display: 'flex',

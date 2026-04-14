@@ -19,7 +19,9 @@ const safeStoredUser = () => {
 const TeacherClassesPage = () => {
   const navigate = useNavigate()
   const { user, loading: authLoading } = useAuth()
-  const teacherId = extractUserId(user) || extractUserId(safeStoredUser())
+
+  const storedUser = safeStoredUser()
+  const teacherId = extractUserId(user) || extractUserId(storedUser)
 
   const [classes, setClasses] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -42,7 +44,7 @@ const TeacherClassesPage = () => {
         }
 
         const res = await classesAPI.getByTeacher(teacherId)
-        const data = res?.classes || res?.data || res || []
+        const data = res?.data || []
         setClasses(Array.isArray(data) ? data : [])
       } catch (err) {
         setApiError(err.message || 'Impossible de charger les classes.')
@@ -80,8 +82,8 @@ const TeacherClassesPage = () => {
     }
   }
 
-  const handleOpenClass = (cls) => {navigate
-    navigate(`/teacher/class/${cls.id}/live`, { state: { cls } })
+  const handleOpenClass = (cls) => {
+    navigate(`/teacher/class/${cls.id || cls._id}/live`, { state: { cls } })
   }
 
   return (
@@ -117,7 +119,12 @@ const TeacherClassesPage = () => {
               }}
               onMouseEnter={() => setHovAddBtn(true)}
               onMouseLeave={() => setHovAddBtn(false)}
-              onClick={() => setShowModal(true)}
+              onClick={() => {
+                console.log('[TeacherClassesPage] teacher from auth =', user)
+                console.log('[TeacherClassesPage] teacher from localStorage =', storedUser)
+                console.log('[TeacherClassesPage] teacherId passed to modal =', teacherId)
+                setShowModal(true)
+              }}
             >
               <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span> Add Class
             </button>
@@ -177,6 +184,7 @@ const TeacherClassesPage = () => {
 
       {showModal && (
         <AddClassModal
+          teacherId={teacherId}
           onSave={handleAddClass}
           onClose={() => setShowModal(false)}
         />

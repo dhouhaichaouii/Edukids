@@ -1,6 +1,3 @@
-// src/pages/student/StudentLoginPage.jsx
-// Student login page — English display
-
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
@@ -10,7 +7,6 @@ import InputField from '../../components/auth/InputField'
 import SubmitButton from '../../components/auth/SubmitButton'
 
 import { authAPI } from '../../api/client'
-import { useAuth } from '../../context/AuthContext'
 
 const validate = (form) => {
   const errors = {}
@@ -28,9 +24,42 @@ const validate = (form) => {
   return errors
 }
 
+function normalizeStudentPayload(res) {
+  const raw =
+    res?.data?.student ||
+    res?.student ||
+    res?.data ||
+    res?.user ||
+    null
+
+  if (!raw) return null
+
+  const id = raw._id || raw.id || null
+  if (!id) return null
+
+  return {
+    _id: String(id),
+    id: String(id),
+    firstName: raw.firstName || '',
+    lastName: raw.lastName || '',
+    name:
+      raw.name ||
+      `${raw.firstName || ''} ${raw.lastName || ''}`.trim() ||
+      'Student',
+    studentCode: raw.studentCode || '',
+    classId: raw.classId || '',
+    supportProfile: raw.supportProfile || 'none',
+    avatar: raw.avatar || '🧒',
+    condition: raw.condition || 'normal',
+    grade: raw.grade || 'Student',
+    xp: raw.xp || 0,
+    level: raw.level || 1,
+    streak: raw.streak || 0,
+  }
+}
+
 const StudentLoginPage = () => {
   const navigate = useNavigate()
-  const { login } = useAuth()
 
   const [form, setForm] = useState({
     studentCode: '',
@@ -68,16 +97,26 @@ const StudentLoginPage = () => {
 
     try {
       const res = await authAPI.studentLogin({
-        studentCode: form.studentCode,
-        pin: form.pin,
+        studentCode: form.studentCode.trim().toUpperCase(),
+        pin: form.pin.trim(),
       })
 
+      const studentUser = normalizeStudentPayload(res)
+
+      if (!studentUser || !studentUser._id) {
+        throw new Error('Réponse login student invalide : _id manquant')
+      }
+
+      localStorage.setItem('ek_user', JSON.stringify(studentUser))
+      localStorage.setItem('ek_role', 'student')
+
+      console.log('ek_user saved =', studentUser)
+
       setSuccess(true)
-      login(res.user,'student')
 
       setTimeout(() => {
         navigate('/student/dashboard')
-      }, 1000)
+      }, 800)
     } catch (err) {
       setApiError(err.message || 'Incorrect student code or PIN')
     } finally {

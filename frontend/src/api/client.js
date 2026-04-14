@@ -20,9 +20,6 @@ const request = async (method, endpoint, data = null) => {
     json = {}
   }
 
-  // IMPORTANT:
-  // Pas de redirection automatique ici.
-  // Sinon un login incorrect quitte la page login.
   if (!response.ok || json.success === false) {
     throw new Error(json.message || json.error || 'Something went wrong')
   }
@@ -30,7 +27,6 @@ const request = async (method, endpoint, data = null) => {
   return json
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
 export const authAPI = {
   teacherRegister: (data) => request('POST', '/auth/teacher/register', data),
   teacherLogin: (data) => request('POST', '/auth/teacher/login', data),
@@ -39,16 +35,16 @@ export const authAPI = {
   studentLogin: (data) => request('POST', '/student-auth/login', data),
 }
 
-// ── Classes ───────────────────────────────────────────────────────────────────
 export const classesAPI = {
   create: (data) => request('POST', '/classes', data),
   getByTeacher: (teacherId) => request('GET', `/classes/teacher/${teacherId}`),
+  getByCode: (classCode) =>
+    request('GET', `/classes/code/${encodeURIComponent(String(classCode).toUpperCase())}`),
   getById: (id) => request('GET', `/classes/${id}`),
   update: (id, data) => request('PATCH', `/classes/${id}`, data),
   delete: (id) => request('DELETE', `/classes/${id}`),
 }
 
-// ── Live Session ──────────────────────────────────────────────────────────────
 export const liveSessionAPI = {
   getClassDetails: (classId) =>
     request('GET', `/teacher/live/classes/${classId}`),
@@ -66,7 +62,6 @@ export const liveSessionAPI = {
     request('POST', `/teacher/live/materials/upload`, formData),
 }
 
-// ── Sessions ──────────────────────────────────────────────────────────────────
 export const sessionsAPI = {
   start: (data) => request('POST', '/sessions/start', data),
   end: (id) => request('POST', `/sessions/${id}/end`),
@@ -74,17 +69,14 @@ export const sessionsAPI = {
   getById: (id) => request('GET', `/sessions/${id}`),
 }
 
-// ── Teacher ───────────────────────────────────────────────────────────────────
 export const teacherAPI = {
   getDashboard: (sessionId) => request('GET', `/teacher/dashboard/${sessionId}`),
 }
 
-// ── Events ────────────────────────────────────────────────────────────────────
 export const eventsAPI = {
   buttonPress: (data) => request('POST', '/events/button-press', data),
   getBySession: (sessionId) => request('GET', `/events/session/${sessionId}`),
 }
-
 
 export const parentAPI = {
   getChildren: (parentId) => request('GET', `/parent/children/${parentId}`),
@@ -99,15 +91,14 @@ export const parentAPI = {
   },
 }
 
-// ── Student ───────────────────────────────────────────────────────────────────
 export const studentAPI = {
   getProfile: (studentId) => request('GET', `/student-auth/profile/${studentId}`),
 }
 
 export const studentsAPI = {
-  getClassrooms: (studentId) => request('GET', `/students/${studentId}/classrooms`),
-  joinClassroom: (studentId, classroomCode) =>
-    request('POST', `/students/${studentId}/join`, { classroomCode }),
+  getClassroom: (studentId) => request('GET', `/students/${studentId}/classroom`),
+  joinClassroom: (studentId, classCode) =>
+    request('POST', `/students/${studentId}/join-class`, { classCode }),
 }
 
 export const materialsAPI = {

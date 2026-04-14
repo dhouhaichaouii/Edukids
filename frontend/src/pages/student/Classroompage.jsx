@@ -1,23 +1,85 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStudent } from "../../context/Studentcontext";
+import { studentsAPI } from "../../api/client";
 import Header from "../../components/student/Header";
 import ChatbotFAB from "../../components/student/Chatbotfab";
 import "./Classroompage.css";
 
+function mapBackendClassroomToCard(data) {
+  const classInfo = data?.classInfo || data;
+  const materials = data?.materials || [];
+
+  return {
+    id: String(classInfo._id || classInfo.id),
+    name: classInfo.name || "Classroom",
+    classCode: classInfo.classCode || "",
+    teacher: classInfo.teacherName || "Teacher",
+    teacherAvatar: "👩‍🏫",
+    color: "#7C3AED",
+    emoji: "🏫",
+    studentsCount: classInfo.studentCount || 0,
+    courses: materials.map((m) => ({
+      id: String(m._id),
+      title: m.title,
+      pages: 0,
+      uploadedAt: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "",
+      thumbnail: "📚",
+      size: "",
+      completed: false,
+      fileUrl: m.fileUrl,
+      subject: m.subject,
+    })),
+  };
+}
+
 export default function ClassroomPage() {
-  const { classroomId } = useParams();                 // ← classroomId depuis l'URL
-  const { classrooms, openCourse } = useStudent();
-  const id = classroomId;
+  const { classroomId } = useParams();
+  const { classrooms, student, openCourse } = useStudent();
+  const [loadingClassroom, setLoadingClassroom] = useState(false);
+  const [fetchedClassroom, setFetchedClassroom] = useState(null);
   const navigate = useNavigate();
 
-  // On cherche la classroom dans le tableau — fonctionne même en accès direct par URL
-  const classroom = classrooms.find((c) => c.id === id);
+  const id = classroomId;
+  const classroom = classrooms.find((c) => c.id === id) || fetchedClassroom;
+
+  useEffect(() => {
+    if (classroom || !student) return;
+
+    const loadClassroom = async () => {
+      setLoadingClassroom(true);
+      try {
+        const studentId = student?._id || student?.id;
+        if (!studentId) return;
+
+        const res = await studentsAPI.getClassroom(studentId);
+        const data = res?.data;
+
+        if (data?.joined && data?.classInfo && String(data.classInfo._id) === String(id)) {
+          setFetchedClassroom(mapBackendClassroomToCard(data));
+        }
+      } catch (err) {
+        console.warn("ClassroomPage loadClassroom error:", err.message);
+      } finally {
+        setLoadingClassroom(false);
+      }
+    };
+
+    loadClassroom();
+  }, [classroom, id, student]);
+
+  if (loadingClassroom) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#9E99B8" }}>
+        Chargement de la classe…
+      </div>
+    );
+  }
 
   if (!classroom) {
     return (
       <div style={{ padding: 40, textAlign: "center", color: "#9E99B8" }}>
-        Classroom introuvable.{" "}
+        Classroom introuvable. {" "}
         <button onClick={() => navigate("/student/classrooms")}>← Retour</button>
       </div>
     );

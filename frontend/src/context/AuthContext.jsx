@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState } from 'react'
 
 const AuthContext = createContext(null)
 
-/* Helpers */
 const safeJSON = (str) => {
   if (!str || str === 'undefined' || str === 'null') return null
   try {
@@ -12,21 +11,32 @@ const safeJSON = (str) => {
   }
 }
 
-const normalizeUser = (raw) => {
+export const extractUserId = (obj) =>
+  obj?._id || obj?.id || obj?.userId || obj?.user?._id || obj?.user?.id || null
+
+const pickUserByRole = (raw, role) => {
   if (!raw || typeof raw !== 'object') return null
 
-  return (
-    raw.user ||
-    raw.teacher ||
-    raw.data?.user ||
-    raw.data?.teacher ||
-    raw.data ||
-    raw
-  )
-}
+  if (role === 'student') {
+    return (
+      raw.student || raw.data?.student || raw.user || raw.data?.user || raw.data || raw
+    )
+  }
 
-export const extractUserId = (obj) =>
-  obj?._id || obj?.id || obj?.userId || null
+  if (role === 'teacher') {
+    return (
+      raw.teacher || raw.data?.teacher || raw.user || raw.data?.user || raw.data || raw
+    )
+  }
+
+  if (role === 'parent') {
+    return (
+      raw.parent || raw.data?.parent || raw.user || raw.data?.user || raw.data || raw
+    )
+  }
+
+  return raw.user || raw.data?.user || raw.data || raw
+}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
@@ -34,18 +44,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const storedUserRaw = safeJSON(localStorage.getItem('ek_user'))
+    const storedUser = safeJSON(localStorage.getItem('ek_user'))
     const storedRole = localStorage.getItem('ek_role') || null
 
-    const normalizedUser = normalizeUser(storedUserRaw)
-
-    if (normalizedUser && extractUserId(normalizedUser) && storedRole) {
-      setUser(normalizedUser)
+    if (storedUser && storedRole && extractUserId(storedUser)) {
+      setUser(storedUser)
       setRole(storedRole)
-
-      // Réécrit une version propre en localStorage
-      localStorage.setItem('ek_user', JSON.stringify(normalizedUser))
-      localStorage.setItem('ek_role', storedRole)
     } else {
       localStorage.removeItem('ek_user')
       localStorage.removeItem('ek_role')
@@ -63,8 +67,9 @@ export const AuthProvider = ({ children }) => {
       return false
     }
 
-    const normalized = normalizeUser(userData)
+    const normalized = pickUserByRole(userData, userRole)
 
+    console.log('LOGIN role =', userRole)
     console.log('LOGIN raw =', userData)
     console.log('LOGIN normalized =', normalized)
 
@@ -72,6 +77,7 @@ export const AuthProvider = ({ children }) => {
       console.error('AuthContext.login() — cannot find _id/id in userData.', {
         raw: userData,
         normalized,
+        userRole,
       })
       return false
     }
