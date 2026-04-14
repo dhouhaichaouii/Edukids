@@ -6,9 +6,16 @@ import './styles/tokens.css'
 import RoleSelectPage from './pages/RoleSelectPage'
 import TeacherRegisterPage from './pages/teacher/TeacherRegisterPage'
 import TeacherLoginPage from './pages/teacher/TeacherLoginPage'
-import TeacherDashboard from './pages/teacher/TeacherDashboard'
+
+import ParentLoginPage from './pages/parent/ParentLoginPage'
+import ParentRegisterPage from './pages/parent/ParentRegisterPage'
+import StudentLoginPage from './pages/student/StudentLoginPage'
+import TeacherClassesPage   from './pages/teacher/TeacherClassesPage'
+import TeacherClassLivePage from './pages/teacher/TeacherClassLivePage'
+
 import BuddyPage from './pages/student/BuddyPage'
 import ChildrenPage from './pages/parent/ChildrenPage'
+
 const App = () => {
   return (
     <Routes>
@@ -19,12 +26,9 @@ const App = () => {
       {/* ── Teacher ──────────────────────────────────────────────── */}
       <Route path="/teacher/register" element={<TeacherRegisterPage />} />
       <Route path="/teacher/login" element={<TeacherLoginPage />} />
-      <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-
-      <Route
-        path="/teacher/session"
-        element={<Placeholder title="Live Session" color="#4ECDC4" backTo="/teacher/dashboard" backLabel="← Dashboard teacher" />}
-      />
+      <Route path="/teacher/classes"         element={<TeacherClassesPage />} />
+      <Route path="/teacher/class/:classId/live" element={<TeacherClassLivePage />} />
+      
       <Route
         path="/teacher/students"
         element={<Placeholder title="Mes élèves" color="#9B8EFF" backTo="/teacher/dashboard" backLabel="← Dashboard teacher" />}
@@ -43,6 +47,8 @@ const App = () => {
       />
 
       {/* ── Parent ───────────────────────────────────────────────── */}
+      <Route path="/parent/login" element={<ParentLoginPage />} />
+      <Route path="/parent/register" element={<ParentRegisterPage />} />
       <Route
         path="/parent/login"
         element={<Placeholder title="Parent Login" color="#FF6B6B" />}
@@ -51,14 +57,12 @@ const App = () => {
         path="/parent/register"
         element={<Placeholder title="Parent Register" color="#FF6B6B" />}
       />
-      <Route
-        path="/parent/dashboard"
-        element={<Placeholder title="Parent Dashboard" color="#FF6B6B" />}
-      />
-      <Routes>
-        <Route path="/parent/children" element={<ChildrenPage />} />
-      </Routes>
+     
+      
+      <Route path="/parent/dashboard" element={<ChildrenPage/>} />
+     
       {/* ── Student ──────────────────────────────────────────────── */}
+      <Route path="/student/login" element={<StudentLoginPage />} />
       <Route
         path="/student/login"
         element={<Placeholder title="Student Login" color="#4ECDC4" />}

@@ -1,20 +1,15 @@
-// src/api/client.js
-
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-const request = async (method, endpoint, data = null, token = null) => {
+// ── Une seule fonction request avec le token JWT ──────────────────────────────
+const request = async (method, endpoint, data = null) => {
+  const token = localStorage.getItem('token')
+
   const headers = {
     'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
   }
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
-  }
-
-  const config = {
-    method,
-    headers,
-  }
+  const config = { method, headers }
 
   if (data && method !== 'GET') {
     config.body = JSON.stringify(data)
@@ -29,6 +24,13 @@ const request = async (method, endpoint, data = null, token = null) => {
     json = {}
   }
 
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    window.location.href = '/login'
+    return
+  }
+
   if (!response.ok) {
     throw new Error(json.message || json.error || 'Something went wrong')
   }
@@ -36,51 +38,82 @@ const request = async (method, endpoint, data = null, token = null) => {
   return json
 }
 
+// ── Auth ──────────────────────────────────────────────────────────────────────
 export const authAPI = {
   teacherRegister: (data) => request('POST', '/auth/teacher/register', data),
-  teacherLogin: (data) => request('POST', '/auth/teacher/login', data),
-  parentRegister: (data) => request('POST', '/auth/parent/register', data),
-  parentLogin: (data) => request('POST', '/auth/parent/login', data),
-  studentLogin: (data) => request('POST', '/student-auth/login', data),
+  teacherLogin:    (data) => request('POST', '/auth/teacher/login',    data),
+  parentRegister:  (data) => request('POST', '/auth/parent/register',  data),
+  parentLogin:     (data) => request('POST', '/auth/parent/login',     data),
+  studentLogin:    (data) => request('POST', '/student-auth/login',    data),
 }
 
+// ── Classes ───────────────────────────────────────────────────────────────────
+export const classesAPI = {
+  create:      (data)     => request('POST',   '/classes',                data),
+  getByTeacher:(teacherId)=> request('GET',    `/classes/teacher/${teacherId}`),
+  getById:     (id)       => request('GET',    `/classes/${id}`),
+  update:      (id, data) => request('PUT',    `/classes/${id}`,          data),
+  delete:      (id)       => request('DELETE', `/classes/${id}`),
+}
+
+// ── Live Session ──────────────────────────────────────────────────────────────
+// ⚠️ Ces méthodes utilisaient une variable `api` (axios) non définie.
+// Migrées vers fetch via request() pour cohérence.
+export const liveSessionAPI = {
+  getClassDetails:    (classId)            => request('GET',  `/teacher/live/classes/${classId}`),
+  getOrCreateSession: ({ classId, subject})=> request('POST', `/teacher/live/session/start`, { classId, subject }),
+  getSnapshot:        (sessionId)          => request('GET',  `/teacher/live/session/${sessionId}/snapshot`),
+  getMaterials:       ({ classId, subject})=> request('GET',  `/teacher/live/materials?classId=${classId}&subject=${encodeURIComponent(subject)}`),
+  uploadMaterial:     (formData)           => {
+    // multipart/form-data — ne pas mettre Content-Type manuellement
+    const token = localStorage.getItem('token')
+    return fetch(`${BASE_URL}/teacher/live/materials/upload`, {
+      method:  'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body:    formData,
+    }).then(r => r.json())
+  },
+}
+
+// ── Sessions ──────────────────────────────────────────────────────────────────
 export const sessionsAPI = {
-  start: (data, token) => request('POST', '/sessions/start', data, token),
-  end: (id, token) => request('POST', `/sessions/${id}/end`, null, token),
-  getActive: (classId, token) => request('GET', `/sessions/active/${classId}`, null, token),
-  getById: (id, token) => request('GET', `/sessions/${id}`, null, token),
+  start:     (data)    => request('POST', '/sessions/start',          data),
+  end:       (id)      => request('POST', `/sessions/${id}/end`),
+  getActive: (classId) => request('GET',  `/sessions/active/${classId}`),
+  getById:   (id)      => request('GET',  `/sessions/${id}`),
 }
 
+// ── Teacher ───────────────────────────────────────────────────────────────────
 export const teacherAPI = {
-  getDashboard: (sessionId, token) => request('GET', `/teacher/dashboard/${sessionId}`, null, token),
+  getDashboard: (sessionId) => request('GET', `/teacher/dashboard/${sessionId}`),
 }
 
+// ── Events ────────────────────────────────────────────────────────────────────
 export const eventsAPI = {
-  buttonPress: (data, token) => request('POST', '/events/button-press', data, token),
-  getBySession: (sessionId, token) => request('GET', `/events/session/${sessionId}`, null, token),
+  buttonPress: (data)      => request('POST', '/events/button-press',      data),
+  getBySession:(sessionId) => request('GET',  `/events/session/${sessionId}`),
 }
 
+// ── Parent ────────────────────────────────────────────────────────────────────
 export const parentAPI = {
-  getChildren: (parentId, token) => request('GET', `/parent/children/${parentId}`, null, token),
-  addChild: (data, token) => request('POST', '/parent/children', data, token),
-  getDailySummary: (studentId, date, token) =>
-    request(
-      'GET',
-      `/parent/daily-summary/${studentId}${date ? `?date=${date}` : ''}`,
-      null,
-      token
-    ),
+  getChildren:     (parentId)         => request('GET',  `/parent/children/${parentId}`),
+  addChild:        (data)             => request('POST', '/parent/children',             data),
+  getDailySummary: (studentId, date)  => request('GET',  `/parent/daily-summary/${studentId}${date ? `?date=${date}` : ''}`),
 }
 
+// ── Student ───────────────────────────────────────────────────────────────────
 export const studentAPI = {
-  getProfile: (studentId, token) => request('GET', `/student-auth/profile/${studentId}`, null, token),
+  getProfile: (studentId) => request('GET', `/student-auth/profile/${studentId}`),
 }
 
+// ── Export default ────────────────────────────────────────────────────────────
 export default {
-  auth: authAPI,
-  sessions: sessionsAPI,
-  teacher: teacherAPI,
-  events: eventsAPI,
-  parent: parentAPI,
-  student: studentAPI,
+  auth:        authAPI,
+  classes:     classesAPI,
+  liveSession: liveSessionAPI,
+  sessions:    sessionsAPI,
+  teacher:     teacherAPI,
+  events:      eventsAPI,
+  parent:      parentAPI,
+  student:     studentAPI,
 }

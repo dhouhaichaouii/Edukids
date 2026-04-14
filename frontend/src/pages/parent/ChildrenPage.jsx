@@ -1,22 +1,25 @@
-import { useState } from 'react'
-import { useStudents }    from '../../hooks/useStudents'
-import ChildCard          from '../../components/shared/ChildCard'
-import AddChildModal      from '../../components/shared/AddChildModal'
+import { useState }      from 'react'
+import { useStudents }   from '../../hooks/useStudents'
+import ChildCard         from '../../components/shared/ChildCard'
+import AddChildModal     from '../../components/shared/AddChildModal'
 
 export default function ChildrenPage() {
   const { children, loading, error, addChild } = useStudents()
   const [showModal, setShowModal] = useState(false)
   const [query,     setQuery]     = useState('')
-  const [toast,     setToast]     = useState(false)
+  const [addedChildInfo, setAddedChildInfo] = useState(null)
 
   const filtered = children.filter(c =>
     `${c.firstName} ${c.lastName}`.toLowerCase().includes(query.toLowerCase())
   )
 
   const handleAdd = async (formData) => {
-    await addChild(formData)
-    setToast(true)
-    setTimeout(() => setToast(false), 3000)
+    const result = await addChild(formData)
+    setAddedChildInfo({
+      studentId: result.student._id,
+      studentCode: result.accessInfo.studentCode,
+      pin: result.accessInfo.pin,
+    })
   }
 
   return (
@@ -25,12 +28,10 @@ export default function ChildrenPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.8rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <span style={{ background: '#ddd6fe', borderRadius: 30, padding: '4px 12px', fontSize: 11, fontWeight: 700, color: '#5b21b6', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+          <span style={{ background: '#ddd6fe', borderRadius: 30, padding: '4px 12px', fontSize: 11, fontWeight: 700, color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '.08em' }}>
             My children
           </span>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#2e1065', margin: '8px 0 4px' }}>
-            My Children
-          </h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#2e1065', margin: '8px 0 4px' }}>My Children</h1>
           <p style={{ fontSize: 13, color: '#9d91c7', margin: 0 }}>
             {children.length} child{children.length !== 1 ? 'ren' : ''} registered
           </p>
@@ -57,9 +58,9 @@ export default function ChildrenPage() {
         />
       </div>
 
-      {/* States */}
-      {loading && <p style={{ color: '#a78bfa', fontSize: 14 }}>Loading...</p>}
-      {error   && <p style={{ color: '#dc2626', fontSize: 14 }}>{error}</p>}
+      {/* États */}
+      {loading && <p style={{ color: '#a78bfa' }}>Loading...</p>}
+      {error   && <p style={{ color: '#dc2626' }}>{error}</p>}
 
       {/* Grid */}
       {!loading && (
@@ -67,11 +68,9 @@ export default function ChildrenPage() {
           {filtered.map((child, i) => (
             <ChildCard key={child._id} child={child} index={i} />
           ))}
-
-          {/* Ghost card */}
           <div
             onClick={() => setShowModal(true)}
-            style={{ borderRadius: 24, border: '2.5px dashed #c4b5fd', background: 'rgba(255,255,255,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', minHeight: 216 }}
+            style={{ borderRadius: 24, border: '2.5px dashed #c4b5fd', background: 'rgba(255,255,255,.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', minHeight: 216 }}
           >
             <div style={{ width: 48, height: 48, borderRadius: 16, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
@@ -84,10 +83,46 @@ export default function ChildrenPage() {
         </div>
       )}
 
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', background: '#f0fdf4', color: '#166534', border: '1.5px solid #bbf7d0', borderRadius: 14, padding: '11px 20px', fontSize: 13, fontWeight: 600, zIndex: 100, whiteSpace: 'nowrap' }}>
-          ✓ Child added — student ID generated automatically
+      {/* Added child info */}
+      {addedChildInfo && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 100,
+          background: '#fff', borderRadius: 20, border: '1px solid #e5e7eb',
+          boxShadow: '0 18px 45px rgba(12, 12, 71, 0.12)', width: 320,
+          padding: '18px 20px', color: '#1f2937',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Child added</p>
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#6b7280' }}>
+                Keep the PIN and student id for the child.
+              </p>
+            </div>
+            <button
+              onClick={() => setAddedChildInfo(null)}
+              style={{
+                background: 'transparent', border: 'none', color: '#6b7280',
+                fontSize: 18, lineHeight: 1, cursor: 'pointer', padding: 0,
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ background: '#faf5ff', borderRadius: 14, padding: '12px 14px' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '.08em' }}>Student ID</p>
+              <p style={{ margin: '6px 0 0', fontWeight: 700, wordBreak: 'break-word' }}>{addedChildInfo.studentId}</p>
+            </div>
+            <div style={{ background: '#f0fdf4', borderRadius: 14, padding: '12px 14px' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.08em' }}>PIN</p>
+              <p style={{ margin: '6px 0 0', fontWeight: 700 }}>{addedChildInfo.pin}</p>
+            </div>
+            <div style={{ background: '#eef2ff', borderRadius: 14, padding: '12px 14px' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#3730a3', textTransform: 'uppercase', letterSpacing: '.08em' }}>Student code</p>
+              <p style={{ margin: '6px 0 0', fontWeight: 700 }}>{addedChildInfo.studentCode}</p>
+            </div>
+          </div>
         </div>
       )}
 
