@@ -15,16 +15,16 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/ai-api': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ai-api/, '/api'),
       },
       '/health': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
       '/files': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
     }

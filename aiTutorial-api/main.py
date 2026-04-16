@@ -495,34 +495,49 @@ async def generate_quiz(request: QuizRequest):
 
         relevant = retrieve(topic, chunks, k=5)
         context  = "\n\n".join(relevant)
+        context = context[:2000] + "..." if len(context) > 2000 else context
 
-        prompt = f"""Create {request.numQuestions} multiple-choice quiz questions about: "{topic}"
+        prompt = f"""You are a quiz generator. Reply ONLY with valid JSON, no extra text or markdown.
+
+Create {request.numQuestions} multiple-choice quiz questions about: "{topic}"
 Difficulty: {request.difficulty}
 
 Use ONLY the context below.
 
 CONTEXT:
-{context}
+""" + context + """
 
 Return ONLY valid JSON in exactly this format (no extra text):
-{{
+{
   "quiz": [
-    {{
+    {
       "question": "...",
       "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
       "answer": "A",
       "explanation": "Brief reason why the correct answer is right"
-    }}
+    }
   ]
-}}"""
+}
+"""
 
-        system_msg = "You are a quiz generator. Reply ONLY with valid JSON, no extra text or markdown."
-        raw = call_llm(prompt, max_tokens=1000, system_message=system_msg)
+        raw = call_llm(prompt, max_tokens=1000)
 
         # Strip possible markdown fences
         raw = re.sub(r"```json|```", "", raw).strip()
+
+        # Try to extract JSON if wrapped in text
+        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if json_match:
+            raw = json_match.group(0)
+
         data = json.loads(raw)
         return QuizResponse(quiz=data["quiz"])
+
+    except Exception as e:
+        logger.exception("Quiz generation failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
     except json.JSONDecodeError as e:
         logger.error(f"Quiz JSON parse error: {e}")
@@ -627,3 +642,9 @@ async def upload_pdf(file: UploadFile = File(...)):
     except Exception as e:
         logger.exception("PDF upload processing failed")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    print("Starting uvicorn...")
+    import uvicorn
+    uvicorn.run("__main__:app", host="0.0.0.0", port=5001)
