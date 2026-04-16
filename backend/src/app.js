@@ -1,5 +1,6 @@
 const express = require('express')
 const cors    = require('cors')
+const path = require('path')
 
 // ─────────────────────────────────────────
 // app.js — Express application
@@ -48,8 +49,9 @@ const studentAuthRoutes = require('./routes/studentAuthRoutes');
 const classRoutes = require('./routes/classRoutes');
 const materialRoutes = require('./routes/materialRoutes');
 const liveRoutes = require('./routes/liveRoutes');
+const iotRoutes = require('./routes/iotRoutes');
 
-
+app.use('/api/iot', iotRoutes);
 app.use('/api/live',      liveRoutes);
 app.use('/api/materials', materialRoutes);
 app.use('/api/classes', classRoutes);
@@ -61,8 +63,8 @@ app.use('/api/parent', parentRoutes);
 app.use('/api/students', studentRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/events",   eventRoutes);
-app.use("/api/teacher",  teacherRoutes);
-app.use('/uploads', express.static('uploads'))
+app.use('/api/teacher',  teacherRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "EduKids API opérationnelle" });

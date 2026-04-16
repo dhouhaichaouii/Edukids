@@ -273,7 +273,6 @@ export default function ClassroomsPage() {
                 type="text"
                 value={classroomCode}
                 onChange={(e) => setClassroomCode(e.target.value.toUpperCase())}
-                placeholder="e.g., I1-G7QE"
                 className="code-input"
                 autoFocus
               />

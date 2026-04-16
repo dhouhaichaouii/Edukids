@@ -131,7 +131,6 @@ const ParentRegisterPage = () => {
                   name="firstName"
                   value={form.firstName}
                   onChange={handleChange}
-                  placeholder="Amina"
                   icon="✏️"
                   error={errors.firstName}
                   required
@@ -143,7 +142,6 @@ const ParentRegisterPage = () => {
                   name="lastName"
                   value={form.lastName}
                   onChange={handleChange}
-                  placeholder="Ben Salem"
                   icon="✏️"
                   error={errors.lastName}
                   required
@@ -158,7 +156,6 @@ const ParentRegisterPage = () => {
                 type="tel"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="+216 12 345 678"
                 icon="📱"
                 error={errors.phone}
                 required
@@ -174,7 +171,6 @@ const ParentRegisterPage = () => {
                 type="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="parent@email.com"
                 icon="📧"
                 error={errors.email}
                 required

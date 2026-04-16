@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom'
 import './styles/tokens.css'
+import './App.css'
 
 
 import RoleSelectPage      from './pages/RoleSelectPage'

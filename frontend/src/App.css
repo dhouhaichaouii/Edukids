@@ -435,4 +435,17 @@ body {
 @media (max-width: 768px) {
   .container { padding: 0 16px; }
   .app-main  { padding-top: calc(var(--header-height) + 8px); }
+  
+}
+input[type="password"] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }

@@ -100,12 +100,12 @@ export default function AddChildModal({ onClose, onAdd }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
             <div>
               <label style={labelStyle}>First name</label>
-              <input style={inputStyle} placeholder="Sophie" value={form.firstName} onChange={set('firstName')} />
+              <input style={inputStyle}  value={form.firstName} onChange={set('firstName')} />
               {errors.firstName && <p style={{ fontSize: 11, color: '#dc2626', margin: '4px 0 0' }}>{errors.firstName}</p>}
             </div>
             <div>
               <label style={labelStyle}>Last name</label>
-              <input style={inputStyle} placeholder="Martin" value={form.lastName} onChange={set('lastName')} />
+              <input style={inputStyle}  value={form.lastName} onChange={set('lastName')} />
               {errors.lastName && <p style={{ fontSize: 11, color: '#dc2626', margin: '4px 0 0' }}>{errors.lastName}</p>}
             </div>
           </div>

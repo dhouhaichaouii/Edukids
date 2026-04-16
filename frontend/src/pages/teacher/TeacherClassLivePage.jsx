@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { liveAPI, materialsAPI, studentsAPI } from '../../api/liveApi'
+import { BASE_URL } from '../../api/client'
 import AddFileModal from '../../components/live/AddFileModal'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000'
@@ -712,7 +713,7 @@ function FilesCard({ materials, loading, sc, onAdd, onDelete }) {
                 <p style={{ fontFamily: "'Nunito',sans-serif", fontSize: '0.82rem', fontWeight: 700, color: '#1A1830', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {m.title}
                 </p>
-                <a href={m.fileUrl} target="_blank" rel="noreferrer" style={{ fontFamily: "'Nunito',sans-serif", fontSize: '0.70rem', color: sc.color, fontWeight: 600, textDecoration: 'none' }}>
+                <a href={`${BASE_URL.replace('/api', '')}${m.fileUrl}`} target="_blank" rel="noreferrer" style={{ fontFamily: "'Nunito',sans-serif", fontSize: '0.70rem', color: sc.color, fontWeight: 600, textDecoration: 'none' }}>
                   Ouvrir ↗
                 </a>
               </div>

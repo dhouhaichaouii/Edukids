@@ -90,7 +90,6 @@ const AddClassModal = ({ teacherId, onSave, onClose }) => {
                   setClassName(e.target.value)
                   setError('')
                 }}
-                placeholder='E.g. "Grade 5-A"'
                 style={s.input}
                 autoFocus
               />

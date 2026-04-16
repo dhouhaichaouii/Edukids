@@ -41,12 +41,17 @@ async function createStudent(data) {
     firstName: firstName.trim(),
     lastName: lastName.trim(),
     dateOfBirth: new Date(dateOfBirth),
-    classId: String(classId).trim(),
+    classIds: classId ? [String(classId).trim()] : [],
     supportProfile,
     parent,
     studentCode,
     pin,
   })
+
+  // If classId provided, increment studentCount in Class
+  if (classId) {
+    await Class.findByIdAndUpdate(classId, { $inc: { studentCount: 1 } })
+  }
 
   return student
 }
@@ -78,7 +83,7 @@ async function getStudentsByClass(classId) {
   if (!classId || !String(classId).trim()) throw new Error('classId est requis')
 
   const students = await Student.find({
-    classId: String(classId).trim(),
+    classIds: String(classId).trim(),
   })
     .sort({ lastName: 1, firstName: 1 })
     .lean()
@@ -104,6 +109,9 @@ async function joinClassByCode(studentId, classCode) {
   if (!student.classIds.includes(String(cls._id))) {
     student.classIds.push(String(cls._id))
     await student.save()
+
+    // Increment studentCount in Class
+    await Class.findByIdAndUpdate(cls._id, { $inc: { studentCount: 1 } })
   }
 
   return student.toObject()

@@ -154,7 +154,6 @@ const StudentLoginPage = () => {
               type="text"
               value={form.studentCode}
               onChange={handleChange}
-              placeholder="Ex: STU-2045"
               icon="🪪"
               error={errors.studentCode}
               required
