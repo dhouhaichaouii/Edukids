@@ -50,6 +50,7 @@ const classRoutes = require('./routes/classRoutes');
 const materialRoutes = require('./routes/materialRoutes');
 const liveRoutes = require('./routes/liveRoutes');
 const iotRoutes = require('./routes/iotRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
 app.use('/api/iot', iotRoutes);
 app.use('/api/live',      liveRoutes);
